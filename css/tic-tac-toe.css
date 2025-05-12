@@ -1,0 +1,103 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 2rem;
+}
+
+button {
+    font-family: inherit;
+}
+
+.btn {
+    border: none;
+    padding: .7rem 1.5rem;
+    font-size: 1.2rem;
+    font-weight: 700;
+    transition-duration: .2s;
+
+    &:hover {
+        opacity: .7;
+    }
+}
+
+.btn--green {
+    background-color: rgb(117, 239, 117);
+    color: rgb(0, 0, 0);
+}
+.btn--red{
+    background-color: rgb(255, 152, 152);
+    color: rgb(0, 0, 0);
+}
+
+.tic-tac-toe {
+    --container-min-width: 300px;
+    --container-padding: 2rem;
+    --cell-width: 10rem;
+    --cell-color: bisque;
+    --lines-color: rgb(140, 140, 140);
+    --lines-width: .5rem;
+    --mark-color: black;
+    --field-size: 3; /* sets by js */
+    --field-width: calc(
+        (var(--field-size) - 1) * var(--lines-width) +
+        var(--field-size) * var(--cell-width)
+    );
+
+    box-sizing: content-box;
+    min-width: var(--container-min-width);
+    width: var(--field-width);
+    padding: var(--container-padding);
+    border: 2px solid black;
+    border-radius: var(--container-padding);
+    display: flex;
+    flex-direction: column;
+    row-gap: 1rem;
+}
+
+.tic-tac-toe__header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    column-gap: .5rem;
+    font-size: 1.5rem;
+}
+
+.tic-tac-toe__info {
+    text-align: center;
+}
+
+.tic-tac-toe__field {
+    width: var(--field-width);
+    aspect-ratio: 1;
+    align-self: center;
+
+    display: grid;
+    grid-template-columns: repeat(var(--field-size), 1fr);
+    grid-template-rows: repeat(var(--field-size), 1fr);
+    gap: var(--lines-width);
+    background-color: var(--lines-color);
+}
+
+.tic-tac-toe__cell {
+    padding: 10%;
+    background-color: var(--cell-color);
+    transition-duration: .2s;
+
+    & svg {
+        display: block;
+    }
+}
+
+.tic-tac-toe__cell--empty:hover {
+    opacity: .7;
+}
+
+.tic-tac-toe__cell--win {
+    background-color: rgb(255, 134, 134);
+}
+
