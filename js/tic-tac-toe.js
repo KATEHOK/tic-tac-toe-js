@@ -5,26 +5,45 @@ import { Cell } from "./cell.js"
 import { Field } from "./field.js"
 import { Player } from "./player.js"
 import { Players } from "./players.js"
+import { ToggleButton } from "./toggle_button.js"
 import { isArray } from "./utils.js"
 
-function click(cell, field, players, event) {
+function win(winner, winCombo, field, button, players) {
+    field.addWinClassNameFor(winCombo)
+    field.deactivateAllCells()
+    setTimeout(() => {
+        alert(`${winner.name} is winner!`)
+        button.setStart()
+        players.resetActivePlayer()
+    }, 200)
+}
+
+function cellClick(cell, button, field, players, event) {
     if (players instanceof Players) {
         const activePlayer = players.activePlayer
         if (activePlayer instanceof Player && cell instanceof Cell) cell.fill(activePlayer.HTMLcontent)
         activePlayer.addFilledCell(cell)
         const winCombo = activePlayer.extractWinCombination(field.winCombinations)
         if (isArray(winCombo)) {
-            field.addWinClassNameFor(winCombo)
-            field.deactivateAllCells()
-            setTimeout(() => {alert(`${activePlayer.name} is winner!`)}, 200)
+            win(activePlayer, winCombo, field, button, players)
             return
         }
         players.switchActivePlayer()
     }
 }
 
+function buttonClick(button, field, players, clickHandler, event) {
+    if (button.state === 'start') {
+        field.resize(3, document.querySelector('#tic-tac-toe'))
+        players.resetAllPlayersFilledCells()
+        field.resetAllCells()
+        players.switchActivePlayer()
+        field.activateAllCells(clickHandler)
+    }
+    else if (button.state === 'stop') field.deactivateAllCells()
+}
+
 const field = new Field()
-const caller = new Caller(click)
 const players = new Players(
     {
         name: 'Cross',
@@ -54,9 +73,14 @@ const players = new Players(
     }
 )
 
-field.resize(3, document.querySelector('#tic-tac-toe'))
-players.switchActivePlayer()
-caller.callOnce = true
-caller.args = [field, players]
-field.activateAllCells(caller)
+const button = new ToggleButton('#tic-tac-toe__btn')
+const cellClickHandler = new Caller({
+    callee: cellClick,
+    callOnce: true,
+    args: [button, field, players]
+})
 
+button.activate({
+    callee: buttonClick,
+    args: [button, field, players, cellClickHandler]
+})

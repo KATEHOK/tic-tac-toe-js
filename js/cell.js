@@ -71,6 +71,30 @@ class Cell extends ClickableHTMLObject {
     }
 
     /**
+     * Не делает ничего (блок вызова добавления обработчика клика)
+     */
+    addClickHandler(newClickHandler, position) {}
+    
+    /**
+     * Меняет обработчик клика
+     * @param {Caller | { callee: Function, context: Object, args: Array, onDeactivate: Caller, callOnce: boolean } | Function} newClickHandler
+     * @returns {undefined}
+     */
+    changeClickHandler(newClickHandler) {
+        this.resetClickHandlers()
+        const ownHandler = (new Caller(newClickHandler)).copy()
+        ownHandler.args = [this, ...ownHandler.args]
+        if (ownHandler.onDeactivate === null) {
+            ownHandler.onDeactivate = new Caller({
+                callee: this.deactivate,
+                context: this,
+                callOnce: true
+            })
+        }
+        super.addClickHandler(ownHandler)
+    }
+
+    /**
      * Деактивация клетки: отключает кликабельность
      * @returns {undefined}
      */
@@ -84,13 +108,7 @@ class Cell extends ClickableHTMLObject {
      * @returns {undefined}
      */
     activate(clickHandler) {
-        const onwHandler = (new Caller(clickHandler)).copy()
-        onwHandler.args = [this, ...onwHandler.args]
-        onwHandler.onDeactivate = new Caller({
-            callee: this.deactivate,
-            context: this
-        })
-        this.addClickHandler(onwHandler)
+        this.changeClickHandler(clickHandler)
         this.activateClick()
     }
 

@@ -134,6 +134,24 @@ class HTMLObject {
     querySelector(selector) {
         this.element = document.querySelector(selector)
     }
+    
+    /**
+     * Добавляет или удаляет класс HTML-элемента
+     * @param {string} className имя класса
+     * @returns {boolean}
+     */
+    toggleClass(className) {
+        return HTMLObject.toggleClass(this.element, className)
+    }
+    
+    /**
+     * Определяет: есть ли класс у HTML-элемента
+     * @param {string} className имя класса
+     * @returns {boolean}
+     */
+    hasClass(className) {
+        return HTMLObject.hasClass(this.element, className)
+    }
 
     /**
      * Добавляет (при отсутствии) класс текущему HTML-элементу
@@ -191,11 +209,11 @@ class HTMLObject {
 
     /**
      * Публикует текущий HTML-элемент в конец контейнера DOM-разметки
-     * @param {HTMLElement} dstContainer контейнер для публикации
+     * @param {HTMLObject | HTMLElement} dstContainer контейнер для публикации
      * @returns {undefined}
      */
     publish(dstContainer) {
-        HTMLObject.appendElement(dstContainer, this.element)
+        HTMLObject.appendElement(dstContainer, this)
     }
 
     /**
@@ -203,7 +221,7 @@ class HTMLObject {
      * @returns {undefined}
      */
     unpublish() {
-        HTMLObject.unpublishElement(this.element)
+        HTMLObject.unpublishElement(this)
     }
 
     /**
@@ -223,20 +241,34 @@ class HTMLObject {
      */
     indexOfHandler(eventType, targetHandler) {
         if (!this.isReadyToHandle(eventType)) return -1
-        let id = this._handlers[eventType].indexOf(targetHandler)
-        return isIdCorrect(id) ? id : -1
+        return this._handlers[eventType].indexOf(targetHandler)
+    }
+
+    /**
+     * Определяет установлен ли такой обработчик события
+     * @param {string} eventType тип события
+     * @param {Caller | { callee: Function, context: Object, args: Array, onDeactivate: Caller, callOnce: boolean } | Function} targetHandler 
+     * @returns {boolean}
+     */
+    includesHandler(eventType, targetHandler) {
+        if (!this.isReadyToHandle(eventType)) return false
+        return this._handlers[eventType].includes(targetHandler)
     }
 
     /**
      * Добавляет обработчик события
      * @param {string} eventType тип события
-     * @param {Caller | { callee: Function, context: Object, args: Array, onDeactivate: Caller, callOnce: boolean } | Function} handler 
+     * @param {Caller | { callee: Function, context: Object, args: Array, onDeactivate: Caller, callOnce: boolean } | Function} handler
+     * @param {string | null} position добавить обработчик клика в конец массива или в начало (по умолчанию - last) 
      * @returns {undefined}
      */
-    addHandler(eventType, handler) {
+    addHandler(eventType, handler, position = 'last') {
         if (!notEmptyStr(eventType)) return
         if (!this.isReadyToHandle(eventType)) this._handlers[eventType] = new EventHandlers()
-        if (this._handlers[eventType] instanceof EventHandlers) this._handlers[eventType].add(handler)
+        if (this._handlers[eventType] instanceof EventHandlers) {
+            if (position === 'last') this._handlers[eventType].append(handler)
+            else this._handlers[eventType].unshift(handler)
+        }
     }
 
     /**
@@ -279,6 +311,23 @@ class HTMLObject {
     deactivateEventListener(eventType) {
         if (!this.isReadyToHandle(eventType)) return
         this.element.removeEventListener(eventType, this._handlers[eventType].handle)
+    }
+
+    /**
+     * Устанавливает постобработчик для события
+     * @param {string} eventType тип события
+     * @param {Caller | { callee: Function, context: Object, args: Array, onDeactivate: Caller, callOnce: boolean } | Function} newAfterHandler 
+     */
+    setAfterEventHandler(eventType, newAfterHandler) {
+        if (this._handlers[eventType] instanceof EventHandlers) {
+            this._handlers[eventType].setAfterHandler(newAfterHandler)
+        }
+    }
+
+    resetEventHandlers(eventType) {
+        if (this._handlers[eventType] instanceof EventHandlers) {
+            this._handlers[eventType].reset()
+        }
     }
 
     /**
@@ -325,23 +374,59 @@ class HTMLObject {
 
     /**
      * Удаляет HTML-элемент из DOM-разметки
-     * @param {HTMLElement} element HTML-элемент
+     * @param {HTMLObject | HTMLElement} element HTML-элемент
      * @returns {undefined}
      */
     static unpublishElement(element) {
-        if (isHTMLElement(element)) element.remove()
+        const elementEl = element instanceof HTMLObject
+            ? element.element
+            : element
+
+        if (isHTMLElement(elementEl)) elementEl.remove()
     }
 
     /**
      * Добавляет HTML-элемент в конец контейнера
-     * @param {HTMLElement} dstContainer контейнер
-     * @param {HTMLElement} element HTML-элемент
+     * @param {HTMLObject | HTMLElement} dstContainer контейнер
+     * @param {HTMLObject | HTMLElement} element HTML-элемент
      * @returns {undefined}
      */
     static appendElement(dstContainer, element) {
-        if (isHTMLElement(dstContainer) && isHTMLElement(element)) {
-            dstContainer.append(element)
+        const dstContainerEl = dstContainer instanceof HTMLObject
+            ? dstContainer.element
+            : dstContainer
+        
+        const elementEl = element instanceof HTMLObject
+            ? element.element
+            : element
+        
+        if (isHTMLElement(dstContainer) && isHTMLElement(elementEl)) {
+            dstContainerEl.append(elementEl)
         }
+    }
+
+    /**
+     * Добавляет или удаляет класс HTML-элемента
+     * @param {HTMLElement} element HTML-элемент
+     * @param {string} className имя класса
+     * @returns {boolean}
+     */
+    static toggleClass(element, className) {
+        return isHTMLElement(element) &&
+            HTMLValidator.isValidAsClassName(className) &&
+            element.classList.toggle(className)
+    }
+
+    /**
+     * Определяет: есть ли класс у HTML-элемента
+     * @param {HTMLElement} element HTML-элемент
+     * @param {string} className имя класса
+     * @returns {boolean}
+     */
+    static hasClass(element, className) {
+        return isHTMLElement(element) &&
+            HTMLValidator.isValidAsClassName(className) &&
+            element.classList.contains(className)
     }
 
     /**
@@ -351,8 +436,11 @@ class HTMLObject {
      * @returns {undefined}
      */
     static addClass(element, className) {
-        if (!isHTMLElement(element) || !HTMLValidator.isValidAsClassName(className)) return
-        if (!element.classList.contains(className)) element.classList.add(className)
+        if (
+            isHTMLElement(element) &&
+            HTMLValidator.isValidAsClassName(className) &&
+            !HTMLObject.hasClass(element, className)
+        ) element.classList.add(className)
     }
 
     /**
@@ -372,8 +460,7 @@ class HTMLObject {
      * @returns {undefined}
      */
     static removeClass(element, className) {
-        if (!isHTMLElement(element) || !HTMLValidator.isValidAsClassName(className)) return
-        if (element.classList.contains(className)) element.classList.remove(className)
+        if (HTMLObject.hasClass(element, className)) element.classList.remove(className)
     }
 
     /**

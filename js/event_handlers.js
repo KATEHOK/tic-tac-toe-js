@@ -6,6 +6,7 @@ import { Caller } from "./caller.js";
  */
 class EventHandlers {
     _handlers = []
+    _afterHandler = new Caller()
 
     /**
      * Создает пустой массив обработчиков, создает общий обработчик handle(event)
@@ -39,14 +40,34 @@ class EventHandlers {
     }
 
     /**
-     * Добавляет в массив обработчик события
+     * Определяет: есть ли такой обработчик в массиве
+     * @param {Caller | { callee: Function, context: Object, args: Array, onDeactivate: Caller, callOnce: boolean } | Function} targetHandler 
+     * @returns {boolean}
+     */
+    includes(targetHandler) {
+        return isIdCorrect(this.indexOf(targetHandler), this.size)
+    }
+
+    /**
+     * Добавляет в конец массива обработчик события
      * @param {Caller | { callee: Function, context: Object, args: Array, onDeactivate: Caller, callOnce: boolean } | Function} handler 
      * @returns {undefined}
      */
-    add(handler) {
+    append(handler) {
         const caller = new Caller(handler)
         if (!caller.isReadyToCall()) return
         this._handlers.push(caller)
+    }
+
+    /**
+     * Добавляет в начало массива обработчик события
+     * @param {Caller | { callee: Function, context: Object, args: Array, onDeactivate: Caller, callOnce: boolean } | Function} handler 
+     * @returns {undefined}
+     */
+    unshift(handler) {
+        const caller = new Caller(handler)
+        if (!caller.isReadyToCall()) return
+        this._handlers.unshift(caller)
     }
 
     /**
@@ -67,7 +88,16 @@ class EventHandlers {
      */
     reset() {
         this._handlers = []
+        this._afterHandler.reset()
         this.handle = this._handle.bind(this)
+    }
+
+    /**
+     * Устанавливает постобработчик
+     * @param {Caller | { callee: Function, context: Object, args: Array, onDeactivate: Caller, callOnce: boolean } | Function} newAfterHandler 
+     */
+    setAfterHandler(newAfterHandler) {
+        this._afterHandler.parseCaller(newAfterHandler)
     }
 
     /**
@@ -83,10 +113,21 @@ class EventHandlers {
             const handler = this._handlers[curId]
             if (handler instanceof Caller && handler.isReadyToCall()) {
                 handler.call(event)
+                this._afterHandle(event)
                 if (handler.callOnce) this.remove(handler)
                 else ++curId;
             }
         }
+    }
+
+
+    /**
+     * Метод постобработки
+     * @param {Object | null} event событие вызова
+     * @returns {undefined}
+     */
+    _afterHandle(event = null) {
+        this._afterHandler.call(event)
     }
 
 }

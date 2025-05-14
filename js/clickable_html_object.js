@@ -1,4 +1,5 @@
 import { isFunction } from "./utils.js"
+import { Caller } from "./caller.js";
 import { HTMLObject } from "./html_object.js";
 import { HTMLValidator } from "./html_validator.js";
 
@@ -66,11 +67,12 @@ class ClickableHTMLObject extends HTMLObject {
 
     /**
      * Добавляет обработчик клика
-     * @param {Caller | { callee: Function, context: Object, args: Array, onDeactivate: Caller, callOnce: boolean } | Function} newClickHandler 
+     * @param {Caller | { callee: Function, context: Object, args: Array, onDeactivate: Caller, callOnce: boolean } | Function} newClickHandler
+     * @param {string | null} position добавить обработчик клика в конец массива или в начало (по умолчанию - last) 
      * @returns {undefined}
      */
-    addClickHandler(newClickHandler) {
-        this.addHandler('click', newClickHandler)
+    addClickHandler(newClickHandler, position = 'last') {
+        this.addHandler('click', newClickHandler, position)
     }
 
     /**
@@ -103,7 +105,9 @@ class ClickableHTMLObject extends HTMLObject {
     }
 
     /**
-     * Устанавливает текущему объекту класс кликера и добавляет (не заменяет!) обработчик клика
+     * Активация кликабельного объекта: добавляет обработчик клика (с коллером деактивации) и включает кликабельность
+     * @param {Caller | { callee: Function, context: Object, args: Array, onDeactivate: Caller, callOnce: boolean } | Function} clickHandler
+     * @param {string | null} position добавить обработчик клика в конец массива или в начало (по умолчанию - last) 
      * @returns {undefined}
      */
     activateClick() {
@@ -142,6 +146,27 @@ class ClickableHTMLObject extends HTMLObject {
     create(tagName, id = null, classList = [], styleList = []) {
         this.deactivateClick()
         super.create(tagName, id, classList, styleList)
+    }
+
+    /**
+     * Определяет установлен ли такой обработчик события клика
+     * @param {Caller | { callee: Function, context: Object, args: Array, onDeactivate: Caller, callOnce: boolean } | Function} targetHandler 
+     * @returns {boolean}
+     */
+    hasClickHandler(targetHandler) {
+        return this.includesHandler('click', targetHandler)
+    }
+
+    /**
+     * Устанавливает постобработчик для события клика
+     * @param {Caller | { callee: Function, context: Object, args: Array, onDeactivate: Caller, callOnce: boolean } | Function} newAfterHandler 
+     */
+    setAfterClickHandler(newAfterHandler) {
+        this.setAfterEventHandler('click', newAfterHandler)
+    }
+
+    resetClickHandlers() {
+        this.resetEventHandlers('click')
     }
 
     /**

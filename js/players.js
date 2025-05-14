@@ -94,6 +94,14 @@ class Players {
         this._players = []
         this._activePlayerId = -1
     }
+
+    /**
+     * Сбрасывает активного игрока
+     * @returns {undefined}
+     */
+    resetActivePlayer() {
+        this._activePlayerId = -1
+    }
 }
 
 export { Players }

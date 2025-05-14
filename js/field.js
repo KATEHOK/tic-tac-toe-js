@@ -112,11 +112,12 @@ class Field extends HTMLObject {
     }
 
     /**
-     * Деактивирует и очищает все клетки
+     * Деактивирует и очищает все клетки (сбрасывает победные классы)
      * @returns {undefined}
      */
-    resetCells() {
+    resetAllCells() {
         this.deactivateAllCells()
+        this._removeWinClassNameFromAll()
         this._freeAllCells()
     }
 
@@ -148,15 +149,17 @@ class Field extends HTMLObject {
         })
     }
 
-    removeWinClassNameFrom(cells) {
+    _removeWinClassNameFrom(cells) {
         if (!isArray(cells)) return
         cells.forEach(cell => {
             if (cell instanceof Cell) cell.removeWinClassName()
         })
     }
 
-    removeWinClassNameFromAll() {
-        this.removeWinClassNameFrom(this._cells)
+    _removeWinClassNameFromAll() {
+        this._cells.forEach(line => {
+            this._removeWinClassNameFrom(line)
+        })
     }
 
     /**
@@ -227,7 +230,10 @@ class Field extends HTMLObject {
      * @returns {undefined}
      */
     _activateCell(targetCell, clickHandler) {
-        if (targetCell instanceof Cell) targetCell.activate(clickHandler)
+        if (targetCell instanceof Cell) {
+            targetCell.deactivate()
+            targetCell.activate(clickHandler)
+        }
     }
 
     /**

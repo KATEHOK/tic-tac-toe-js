@@ -79,7 +79,9 @@ class Caller {
      * @returns {undefined}
      */
     set onDeactivate(callback) {
-        this._onDeactivate = new Caller(callback)
+        if (callback instanceof Caller) this._onDeactivate = callback
+        else if (isFunction(callback)) this._onDeactivate = new Caller(callback)
+        else this._onDeactivate = null
     }
 
     /**

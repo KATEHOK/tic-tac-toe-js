@@ -14,6 +14,7 @@ button {
 }
 
 .btn {
+    text-transform: uppercase;
     border: none;
     padding: .7rem 1.5rem;
     font-size: 1.2rem;
@@ -70,6 +71,8 @@ button {
 .tic-tac-toe__info {
     text-align: center;
 }
+
+.tic-tac-toe__btn {}
 
 .tic-tac-toe__field {
     width: var(--field-width);
