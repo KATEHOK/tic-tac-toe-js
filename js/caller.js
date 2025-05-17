@@ -7,13 +7,12 @@ class Caller {
     _callee = null
     _context = null
     _args = []
-    _onDeactivate = null
     _callOnce = false
     _returned = null
 
     /**
      * Конструктор
-     * @param {Caller | { callee: Function, context: Object, args: Array, onDeactivate: Caller, callOnce: boolean } | Function | null} caller 
+     * @param {Caller | { callee: Function, context: Object, args: Array, callOnce: boolean } | Function | null} caller 
      */
     constructor(caller) {
         this.parseCaller(caller)
@@ -68,23 +67,6 @@ class Caller {
     }
 
     /**
-     * Геттер колбэка при деактивации коллера
-     * @returns {Caller | null}
-     */
-    get onDeactivate() {
-        return this._onDeactivate
-    }
-    /**
-     * Сеттер колбэка при деактивации коллера
-     * @returns {undefined}
-     */
-    set onDeactivate(callback) {
-        if (callback instanceof Caller) this._onDeactivate = callback
-        else if (isFunction(callback)) this._onDeactivate = new Caller(callback)
-        else this._onDeactivate = null
-    }
-
-    /**
      * Геттер настройки однократного вызова
      * @returns {boolean}
      */
@@ -115,7 +97,6 @@ class Caller {
         this._callee = null
         this._context = null
         this._args = []
-        this._onDeactivate = null
         this._callOnce = false
         this._returned = null
     }
@@ -129,7 +110,7 @@ class Caller {
     }
 
     /**
-     * Вызывает функцию с установленными контекстом и аргументами
+     * Вызывает функцию с установленными контекстом и аргументами (при наличии добавляет последним аргументом событие)
      * @param {Object | null} event событие (для слушателей событий)
      * @returns {*} возврат вызываемой функции
      */
@@ -141,13 +122,12 @@ class Caller {
     }
 
     /**
-     * Проверяет массив аргументов на эквивалентность текущему
+     * Проверяет массив аргументов на эквивалентность текущему (аргументы сравниваются поверхностно)
      * @param {Array} anotherArgs 
      * @returns {boolean}
      */
     areArgsEqual(anotherArgs) {
-        if (!isArray(anotherArgs)) return false
-        if (this.args.length !== anotherArgs.length) return false
+        if (!isArray(anotherArgs) || this.args.length !== anotherArgs.length) return false
         let areEqual = true
         this.args.forEach(arg => {
             if (!anotherArgs.includes(arg)) {
@@ -160,7 +140,7 @@ class Caller {
 
     /**
      * Проверяет объект на эквивалентность текущему (сравнение по свойствам: callee, context и args)
-     * @param {{callee: Function, context: Object, args: Array, onDeactivate: Caller, callOnce: boolean}} anotherCaller 
+     * @param {{callee: Function, context: Object, args: Array, callOnce: boolean}} anotherCaller 
      * @returns {boolean}
      */
     isEqual(anotherCaller) {
@@ -168,17 +148,12 @@ class Caller {
             this.callee === anotherCaller.callee &&
             this.context === anotherCaller.context &&
             this.areArgsEqual(anotherCaller.args) &&
-            (
-                this.onDeactivate instanceof Caller &&
-                this.onDeactivate.isEqual(anotherCaller.onDeactivate) ||
-                this.onDeactivate === anotherCaller.onDeactivate
-            ) &&
             this.callOnce === anotherCaller.callOnce
     }
 
     /**
      * Инициализирует текущий объект (может сбрасывать)
-     * @param {Caller | { callee: Function, context: Object, args: Array, onDeactivate: Caller, callOnce: boolean } | Function | null} anotherCaller 
+     * @param {Caller | { callee: Function, context: Object, args: Array, callOnce: boolean } | Function | null} anotherCaller 
      */
     parseCaller(anotherCaller) {
         if (isObject(anotherCaller)) {
@@ -186,19 +161,11 @@ class Caller {
             if (this.isReadyToCall()) {
                 this.context = anotherCaller.context
                 this.args = anotherCaller.args
-                this.onDeactivate = anotherCaller.onDeactivate
                 this.callOnce = anotherCaller.callOnce
             }
         }
         else if (isFunction(anotherCaller)) this.callee = anotherCaller
         else this.reset()
-    }
-
-    /**
-     * Вызов коллера - обработчика деактивации
-     */
-    callDeactivate() {
-        if (this.onDeactivate instanceof Caller) this._onDeactivate.call()
     }
 
     /**
@@ -212,9 +179,6 @@ class Caller {
                 ? {...this._context}
                 : null,
             args: [...this.args],
-            onDeactivate: (this.onDeactivate instanceof Caller)
-                ? this.onDeactivate.copy()
-                : null,
             callOnce: this.callOnce
         })
     }

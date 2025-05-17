@@ -76,22 +76,23 @@ class Cell extends ClickableHTMLObject {
     addClickHandler(newClickHandler, position) {}
     
     /**
-     * Меняет обработчик клика
-     * @param {Caller | { callee: Function, context: Object, args: Array, onDeactivate: Caller, callOnce: boolean } | Function} newClickHandler
+     * Меняет обработчик клика (копирует обработчики, передает обработчику первым аргументом декущую клетку)
+     * @param {Caller | { callee: Function, context: Object, args: Array, callOnce: boolean } | Function} newClickHandler
+     * @param {Caller | { callee: Function, context: Object, args: Array} | Function | null} onRemove
      * @returns {undefined}
      */
-    changeClickHandler(newClickHandler) {
+    changeClickHandler(newClickHandler, onRemove = null) {
         this.resetClickHandlers()
         const ownHandler = (new Caller(newClickHandler)).copy()
         ownHandler.args = [this, ...ownHandler.args]
-        if (ownHandler.onDeactivate === null) {
-            ownHandler.onDeactivate = new Caller({
+        const ownOnRemove = (new Caller(onRemove)).copy()
+        if (!ownOnRemove.isReadyToCall()) {
+            ownOnRemove.parseCaller({
                 callee: this.deactivate,
-                context: this,
-                callOnce: true
+                context: this
             })
         }
-        super.addClickHandler(ownHandler)
+        super.addClickHandler(ownHandler, ownOnRemove)
     }
 
     /**
@@ -104,11 +105,12 @@ class Cell extends ClickableHTMLObject {
 
     /**
      * Активация клетки: включает кликабельность
-     * @param {Caller | { callee: Function, context: Object, args: Array, onDeactivate: Caller, callOnce: boolean } | Function} clickHandler
+     * @param {Caller | { callee: Function, context: Object, args: Array, callOnce: boolean } | Function} clickHandler
+     * @param {Caller | { callee: Function, context: Object, args: Array} | Function | null} onRemove
      * @returns {undefined}
      */
-    activate(clickHandler) {
-        this.changeClickHandler(clickHandler)
+    activate(clickHandler, onRemove = null) {
+        this.changeClickHandler(clickHandler, onRemove)
         this.activateClick()
     }
 

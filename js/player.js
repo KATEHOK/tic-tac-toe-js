@@ -83,7 +83,7 @@ class Player {
     /**
      * Определяет: выиграл ли игрок (собрал ли победную комбинацию)
      * @param {Cell[][]} winCombinations выигрышные комбинации (массив массивов клеток)
-     * @returns {boolean}
+     * @returns {Array | null}
      */
     isWinner(winCombinations) {
         return this.extractWinCombination(winCombinations)

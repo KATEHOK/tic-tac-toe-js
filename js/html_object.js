@@ -217,68 +217,78 @@ class HTMLObject {
     }
 
     /**
-     * Удаляет текущий HTML-элемент из DOM-разметки
+     * Удаляет текущий HTML-элемент из DOM-разметки (деактивирует все его слушатели событий)
      * @returns {undefined}
      */
     unpublish() {
+        this.deactivateAllEventListeners()
         HTMLObject.unpublishElement(this)
     }
 
     /**
-     * Проверка: может ли быть вызван обработчик для события
+     * Проверка: установлены ли обработчики для события
      * @param {string} eventType тип события
      * @returns {undefined}
      */
-    isReadyToHandle(eventType) {
+    hasEventHandlers(eventType) {
         return notEmptyStr(eventType) && this._handlers[eventType] instanceof EventHandlers
+    }
+
+    /**
+     * Создает объект обработчиков для события, если еще не создан 
+     * @param {*} eventType 
+     * @returns 
+     */
+    createEventHandlersIfNotExist(eventType) {
+        if (!notEmptyStr(eventType)) return
+        if (!this.hasEventHandlers(eventType)) this._handlers[eventType] = new EventHandlers()
     }
 
     /**
      * Определяет индекс обработчика события
      * @param {string} eventType тип события
-     * @param {Caller | { callee: Function, context: Object, args: Array, onDeactivate: Caller, callOnce: boolean } | Function} targetHandler 
+     * @param {Caller | { callee: Function, context: Object, args: Array, callOnce: boolean } | Function} targetHandler 
      * @returns {number}
      */
     indexOfHandler(eventType, targetHandler) {
-        if (!this.isReadyToHandle(eventType)) return -1
+        if (!this.hasEventHandlers(eventType)) return -1
         return this._handlers[eventType].indexOf(targetHandler)
     }
 
     /**
      * Определяет установлен ли такой обработчик события
      * @param {string} eventType тип события
-     * @param {Caller | { callee: Function, context: Object, args: Array, onDeactivate: Caller, callOnce: boolean } | Function} targetHandler 
+     * @param {Caller | { callee: Function, context: Object, args: Array, callOnce: boolean } | Function} targetHandler 
      * @returns {boolean}
      */
     includesHandler(eventType, targetHandler) {
-        if (!this.isReadyToHandle(eventType)) return false
+        if (!this.hasEventHandlers(eventType)) return false
         return this._handlers[eventType].includes(targetHandler)
     }
 
     /**
-     * Добавляет обработчик события
+     * Добавляет обработчик события и обработчик удаления
      * @param {string} eventType тип события
-     * @param {Caller | { callee: Function, context: Object, args: Array, onDeactivate: Caller, callOnce: boolean } | Function} handler
-     * @param {string | null} position добавить обработчик клика в конец массива или в начало (по умолчанию - last) 
+     * @param {Caller | { callee: Function, context: Object, args: Array, callOnce: boolean } | Function} handler
+     * @param {Caller | { callee: Function, context: Object, args: Array } | Function | null} onRemove 
+     * @param {string | null} position добавить обработчик в конец массива или в начало (по умолчанию - last) 
      * @returns {undefined}
      */
-    addHandler(eventType, handler, position = 'last') {
+    addHandler(eventType, handler, onRemove = null, position = 'last') {
         if (!notEmptyStr(eventType)) return
-        if (!this.isReadyToHandle(eventType)) this._handlers[eventType] = new EventHandlers()
-        if (this._handlers[eventType] instanceof EventHandlers) {
-            if (position === 'last') this._handlers[eventType].append(handler)
-            else this._handlers[eventType].unshift(handler)
-        }
+        this.createEventHandlersIfNotExist(eventType)
+        if (position === 'last') this._handlers[eventType].append(handler, onRemove)
+        else this._handlers[eventType].unshift(handler, onRemove)
     }
 
     /**
-     * Удаляет обработчик события
+     * Вызывает удаление обработчика события
      * @param {string} eventType тип события
-     * @param {Caller | { callee: Function, context: Object, args: Array, onDeactivate: Caller, callOnce: boolean } | Function} targetHandler 
+     * @param {Caller | { callee: Function, context: Object, args: Array, callOnce: boolean } | Function} targetHandler 
      * @returns {undefined}
      */
     removeHandler(eventType, targetHandler) {
-        if (!this.isReadyToHandle(eventType)) return
+        if (!this.hasEventHandlers(eventType)) return
         this._handlers[eventType].remove(targetHandler)
     }
 
@@ -289,7 +299,7 @@ class HTMLObject {
      * @returns {undefined}
      */
     handle(eventType, event = null) {
-        if (this.isReadyToHandle(eventType)) this._handlers[eventType].handle(event)
+        if (this.hasEventHandlers(eventType)) this._handlers[eventType].handle(event)
     }
 
     /**
@@ -298,7 +308,7 @@ class HTMLObject {
      * @returns {Function} фактическая обертка обработчика события
      */
     activateEventListener(eventType) {
-        if (!this.isReadyToHandle(eventType)) return
+        if (!this.hasEventHandlers(eventType)) return
         this.element.addEventListener(eventType, this._handlers[eventType].handle)
         return this._handlers[eventType].handle
     }
@@ -309,25 +319,39 @@ class HTMLObject {
      * @returns {undefined}
      */
     deactivateEventListener(eventType) {
-        if (!this.isReadyToHandle(eventType)) return
+        if (!this.hasEventHandlers(eventType)) return
         this.element.removeEventListener(eventType, this._handlers[eventType].handle)
+    }
+
+    /**
+     * Деактивирует все слушатели события текущего элемента
+     * @returns {undefined}
+     */
+    deactivateAllEventListeners() {
+        for (const eventType in this._handlers) this.deactivateEventListener(eventType)
     }
 
     /**
      * Устанавливает постобработчик для события
      * @param {string} eventType тип события
-     * @param {Caller | { callee: Function, context: Object, args: Array, onDeactivate: Caller, callOnce: boolean } | Function} newAfterHandler 
+     * @param {Caller | { callee: Function, context: Object, args: Array, callOnce: boolean } | Function} newAfterHandler 
      */
     setAfterEventHandler(eventType, newAfterHandler) {
-        if (this._handlers[eventType] instanceof EventHandlers) {
-            this._handlers[eventType].setAfterHandler(newAfterHandler)
-        }
+        if (!notEmptyStr(eventType)) return
+        this.createEventHandlersIfNotExist(eventType)
+        this._handlers[eventType].setAfterHandler(newAfterHandler)
     }
 
+    /**
+     * Вызывает сброс обработчиков события (удаляет слушатель), если объекта обработчиков не существует, вызывает его создание
+     * @param {*} eventType 
+     */
     resetEventHandlers(eventType) {
-        if (this._handlers[eventType] instanceof EventHandlers) {
+        if (this.hasEventHandlers(eventType)) {
+            this.deactivateEventListener(eventType)
             this._handlers[eventType].reset()
         }
+        else this.createEventHandlersIfNotExist(eventType)
     }
 
     /**

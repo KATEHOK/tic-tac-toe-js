@@ -69,13 +69,14 @@ class Field extends HTMLObject {
 
     /**
      * Активирует все клетки поля (устанавливает слушатель кликов и класс кликера)
-     * @param {Caller | { callee: Function, context: Object, args: Array, onDeactivate: Caller, callOnce: boolean } | Function} clickHandler
+     * @param {Caller | { callee: Function, context: Object, args: Array, callOnce: boolean } | Function} clickHandler
+     * @param {Caller | { callee: Function, context: Object, args: Array} | Function | null} onRemove
      * @returns {undefined}
      */
-    activateAllCells(clickHandler) {
+    activateAllCells(clickHandler, onRemove = null) {
         this._cells.forEach(line => {
             if (isArray(line)) {
-                line.forEach(cell => { this._activateCell(cell, clickHandler) })
+                line.forEach(cell => { this._activateCell(cell, clickHandler, onRemove) })
             }
         })
     }
@@ -226,13 +227,14 @@ class Field extends HTMLObject {
     /**
      * Активирует клетку (устанавливает слушатель кликов и класс кликера)
      * @param {Cell} targetCell целевая клетка
-     * @param @param {Caller | { callee: Function, context: Object, args: Array, onDeactivate: Caller, callOnce: boolean } | Function} clickHandler
+     * @param @param {Caller | { callee: Function, context: Object, args: Array, callOnce: boolean } | Function} clickHandler
+     * @param {Caller | { callee: Function, context: Object, args: Array} | Function | null} onRemove
      * @returns {undefined}
      */
-    _activateCell(targetCell, clickHandler) {
+    _activateCell(targetCell, clickHandler, onRemove = null) {
         if (targetCell instanceof Cell) {
             targetCell.deactivate()
-            targetCell.activate(clickHandler)
+            targetCell.activate(clickHandler, onRemove)
         }
     }
 

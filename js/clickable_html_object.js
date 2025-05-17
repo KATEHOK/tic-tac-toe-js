@@ -53,8 +53,8 @@ class ClickableHTMLObject extends HTMLObject {
      * Геттер: добавлен ли обработчик клика
      * @returns {Boolean}
      */
-    get isClickHandlerSet() {
-        return this.isReadyToHandle('click')
+    get hasClickHandlers() {
+        return this.hasEventHandlers('click')
     }
     
     /**
@@ -67,17 +67,18 @@ class ClickableHTMLObject extends HTMLObject {
 
     /**
      * Добавляет обработчик клика
-     * @param {Caller | { callee: Function, context: Object, args: Array, onDeactivate: Caller, callOnce: boolean } | Function} newClickHandler
+     * @param {Caller | { callee: Function, context: Object, args: Array, callOnce: boolean } | Function} newClickHandler
+     * @param {Caller | { callee: Function, context: Object, args: Array} | Function | null} onRemove
      * @param {string | null} position добавить обработчик клика в конец массива или в начало (по умолчанию - last) 
      * @returns {undefined}
      */
-    addClickHandler(newClickHandler, position = 'last') {
-        this.addHandler('click', newClickHandler, position)
+    addClickHandler(newClickHandler, onRemove = null, position = 'last') {
+        this.addHandler('click', newClickHandler, onRemove, position)
     }
 
     /**
      * Удаляет обработчик клика
-     * @param {Caller | { callee: Function, context: Object, args: Array, onDeactivate: Caller, callOnce: boolean } | Function} clickHandler 
+     * @param {Caller | { callee: Function, context: Object, args: Array, callOnce: boolean } | Function} clickHandler 
      * @returns {undefined}
      */
     removeClickHandler(clickHandler) {
@@ -106,8 +107,6 @@ class ClickableHTMLObject extends HTMLObject {
 
     /**
      * Активация кликабельного объекта: добавляет обработчик клика (с коллером деактивации) и включает кликабельность
-     * @param {Caller | { callee: Function, context: Object, args: Array, onDeactivate: Caller, callOnce: boolean } | Function} clickHandler
-     * @param {string | null} position добавить обработчик клика в конец массива или в начало (по умолчанию - last) 
      * @returns {undefined}
      */
     activateClick() {
@@ -150,7 +149,7 @@ class ClickableHTMLObject extends HTMLObject {
 
     /**
      * Определяет установлен ли такой обработчик события клика
-     * @param {Caller | { callee: Function, context: Object, args: Array, onDeactivate: Caller, callOnce: boolean } | Function} targetHandler 
+     * @param {Caller | { callee: Function, context: Object, args: Array, callOnce: boolean } | Function} targetHandler 
      * @returns {boolean}
      */
     hasClickHandler(targetHandler) {
@@ -159,7 +158,7 @@ class ClickableHTMLObject extends HTMLObject {
 
     /**
      * Устанавливает постобработчик для события клика
-     * @param {Caller | { callee: Function, context: Object, args: Array, onDeactivate: Caller, callOnce: boolean } | Function} newAfterHandler 
+     * @param {Caller | { callee: Function, context: Object, args: Array} | Function} newAfterHandler 
      */
     setAfterClickHandler(newAfterHandler) {
         this.setAfterEventHandler('click', newAfterHandler)

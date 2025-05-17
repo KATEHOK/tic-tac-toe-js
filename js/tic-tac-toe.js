@@ -3,44 +3,46 @@
 import { Caller } from "./caller.js"
 import { Cell } from "./cell.js"
 import { Field } from "./field.js"
+import { InfoLabel } from "./info_label.js"
 import { Player } from "./player.js"
 import { Players } from "./players.js"
 import { ToggleButton } from "./toggle_button.js"
 import { isArray } from "./utils.js"
 
-function win(winner, winCombo, field, button, players) {
+function win(winner, winCombo, field, infoLabel, button, players) {
     field.addWinClassNameFor(winCombo)
     field.deactivateAllCells()
-    setTimeout(() => {
-        alert(`${winner.name} is winner!`)
-        button.setStart()
-        players.resetActivePlayer()
-    }, 200)
+    infoLabel.setWinner(winner.name)
+    button.setStart()
+    players.resetActivePlayer()
 }
 
-function cellClick(cell, button, field, players, event) {
-    if (players instanceof Players) {
-        const activePlayer = players.activePlayer
-        if (activePlayer instanceof Player && cell instanceof Cell) cell.fill(activePlayer.HTMLcontent)
-        activePlayer.addFilledCell(cell)
-        const winCombo = activePlayer.extractWinCombination(field.winCombinations)
-        if (isArray(winCombo)) {
-            win(activePlayer, winCombo, field, button, players)
-            return
-        }
-        players.switchActivePlayer()
+function cellClick(cell, infoLabel, button, field, players, event) {
+    const activePlayer = players.activePlayer
+    if (activePlayer instanceof Player && cell instanceof Cell) cell.fill(activePlayer.HTMLcontent)
+    activePlayer.addFilledCell(cell)
+    const winCombo = activePlayer.extractWinCombination(field.winCombinations)
+    if (isArray(winCombo)) {
+        win(activePlayer, winCombo, field, infoLabel, button, players)
+        return
     }
+    players.switchActivePlayer()
+    infoLabel.setActivePlayer(players.activePlayer.name)
 }
 
-function buttonClick(button, field, players, clickHandler, event) {
+function buttonClick(infoLabel, button, field, players, clickHandler, event) {
     if (button.state === 'start') {
         field.resize(3, document.querySelector('#tic-tac-toe'))
         players.resetAllPlayersFilledCells()
         field.resetAllCells()
         players.switchActivePlayer()
+        infoLabel.setActivePlayer(players.activePlayer.name)
         field.activateAllCells(clickHandler)
     }
-    else if (button.state === 'stop') field.deactivateAllCells()
+    else if (button.state === 'stop') {
+        field.deactivateAllCells()
+        infoLabel.setNotStarted()
+    }
 }
 
 const field = new Field()
@@ -73,14 +75,17 @@ const players = new Players(
     }
 )
 
-const button = new ToggleButton('#tic-tac-toe__btn')
+const infoLabel = new InfoLabel()
+const button = new ToggleButton()
 const cellClickHandler = new Caller({
     callee: cellClick,
     callOnce: true,
-    args: [button, field, players]
+    args: [infoLabel, button, field, players]
 })
+
+infoLabel.setNotStarted()
 
 button.activate({
     callee: buttonClick,
-    args: [button, field, players, cellClickHandler]
+    args: [infoLabel, button, field, players, cellClickHandler]
 })

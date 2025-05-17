@@ -95,11 +95,12 @@ class ToggleButton extends ClickableHTMLObject {
 
     /**
      * Активация кнопки: включает кликабельность, устанавливает состояние в "старт"
-     * @param {Caller | { callee: Function, context: Object, args: Array, onDeactivate: Caller, callOnce: boolean } | Function} clickHandler
+     * @param {Caller | { callee: Function, context: Object, args: Array, callOnce: boolean } | Function} clickHandler
+     * @param {Caller | { callee: Function, context: Object, args: Array} | Function | null} onRemove
      * @returns {undefined}
      */
-    activate(clickHandler) {
-        this.addClickHandler(clickHandler)
+    activate(clickHandler, onRemove = null) {
+        this.addClickHandler(clickHandler, onRemove)
         const newAfterClickCaller = new Caller({
             callee: this._toggleState,
             context: this
@@ -143,8 +144,6 @@ class ToggleButton extends ClickableHTMLObject {
      */
     _setState(state) {
         if (isString(state)) this._setStateId(this._states.indexOf(state))
-        // console.log('ToggleButton -> after _setState')
-        // console.log('this.state', this.state)
     }
 
     /**
