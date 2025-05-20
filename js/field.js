@@ -1,4 +1,4 @@
-import { isArray, isIdCorrect, notNegativeInt, isNum, isHTMLElement } from "./utils.js"
+import { isArray, isIdCorrect, notNegativeInt, isNum } from "./utils.js"
 import { HTMLObject } from "./html_object.js"
 import { Cell } from "./cell.js"
 
@@ -8,9 +8,6 @@ import { Cell } from "./cell.js"
 class Field extends HTMLObject {
     _cells = []
     _winCombinations = []
-
-    // TO DO
-    // мб нужно добавить класс-обертку для контейнеров
 
     /**
      * Конструктор игрового поля

@@ -1,4 +1,3 @@
-import { isFunction } from "./utils.js"
 import { HTMLValidator } from "./html_validator.js"
 import { ClickableHTMLObject } from "./clickable_html_object.js"
 import { Caller } from "./caller.js"

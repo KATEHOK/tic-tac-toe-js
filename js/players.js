@@ -1,4 +1,4 @@
-import { isNatural, notEmptyStr, isObject, isIdCorrect } from "./utils.js";
+import { notEmptyStr, isObject, isIdCorrect } from "./utils.js";
 import { Player } from "./player.js";
 
 class Players {

@@ -1,5 +1,4 @@
-import { isHTMLElement, isIdCorrect, isString, notEmptyStr } from "./utils.js";
-import { HTMLObject } from "./html_object.js";
+import { isIdCorrect, isString } from "./utils.js";
 import { ClickableHTMLObject } from "./clickable_html_object.js";
 import { HTMLValidator } from "./html_validator.js";
 import { Caller } from "./caller.js";
@@ -97,15 +96,12 @@ class ToggleButton extends ClickableHTMLObject {
      * Активация кнопки: включает кликабельность, устанавливает состояние в "старт"
      * @param {Caller | { callee: Function, context: Object, args: Array, callOnce: boolean } | Function} clickHandler
      * @param {Caller | { callee: Function, context: Object, args: Array} | Function | null} onRemove
+     * @param {Caller | { callee: Function, context: Object, args: Array} | Function | null} afterClickHandler
      * @returns {undefined}
      */
-    activate(clickHandler, onRemove = null) {
+    activate(clickHandler, onRemove = null, afterClickHandler = null) {
         this.addClickHandler(clickHandler, onRemove)
-        const newAfterClickCaller = new Caller({
-            callee: this._toggleState,
-            context: this
-        })
-        this.setAfterClickHandler(newAfterClickCaller)
+        this.setAfterClickHandler(afterClickHandler)
         this.activateClick()
         this.setStart()
     }

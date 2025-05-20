@@ -176,7 +176,7 @@ class Caller {
         return new Caller({
             callee: this.callee,
             context: isObject(this.context)
-                ? {...this._context}
+                ? this._context
                 : null,
             args: [...this.args],
             callOnce: this.callOnce

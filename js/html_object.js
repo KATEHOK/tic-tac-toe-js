@@ -1,11 +1,8 @@
 import {
-    isBoolean,
     isString,
     isHTMLElement,
-    isFunction,
     notEmptyStr,
     isArray,
-    isIdCorrect,
 } from "./utils.js"
 import { HTMLValidator } from "./html_validator.js"
 import { Caller } from "./caller.js"
